@@ -96,7 +96,7 @@ cp developer.toml adv_chain_developer.toml
 Open `~/.monax/chains/account-types/adv_chain_developer.toml` in your favorite text editor. Make the following changes:
 
 ```toml
-name = "AdvDeveloper"
+name = "Advdeveloper"
 
 ...
 
@@ -150,7 +150,7 @@ definition = ""
 
 [account_types]
 Full = 0
-AdvDeveloper = 3
+Advdeveloper = 3
 Developer = 0
 Participant = 20
 Root = 1
@@ -164,7 +164,7 @@ Validator = 7
 
 ```
 
-You can see that we have zeroed out `Full` (which is a root + validator account type useful in simplechain scenarios) and `Developer` and utilized our new account type `AdvDevelop` which we will make three (3) of. The rest of the account types will use the defaults.
+You can see that we have zeroed out `Full` (which is a root + validator account type useful in simplechain scenarios) and `Developer` and utilized our new account type `Advdeveloper` which we will make three (3) of. The rest of the account types will use the defaults.
 
 Now. After that quick tour we are ready to make the chain.
 

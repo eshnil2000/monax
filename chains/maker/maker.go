@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/loaders"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/loaders"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/util"
 
 	"github.com/hyperledger/burrow/genesis"
 )
@@ -33,10 +33,10 @@ func MakeChain(do *definitions.Do) error {
 		// do.Known
 		log.Info("Making chain using csv type paradigm.")
 		return makeRaw(do, "csv")
-	case do.Wizard == true:
+	case do.Wizard:
 		log.Info("Making chain using wizard paradigm.")
 		return makeWizard(do)
-	case do.Known == true:
+	case do.Known:
 		// TODO: [ben] do.Known needs to become the default way to generate the config
 		// and genesis files from a set of known public keys; so follow the same logic
 		// and go over makeRaw(do, "known"); and construct the account constructors
@@ -92,10 +92,6 @@ func makeWizard(do *definitions.Do) error {
 		if err := assembleTypesWizard(accountT, prelims["tokens"]); err != nil {
 			return err
 		}
-	}
-
-	if prelims["dryrun"] {
-		// todo check if procede or return....
 	}
 
 	if prelims["manual"] {
@@ -161,7 +157,7 @@ func assembleTypesWizard(accountT *definitions.MonaxDBAccountType, tokenIze bool
 		}
 	}
 
-	if accountT.Perms["bond"] == true && accountT.DefaultNumber > 0 {
+	if accountT.Perms["bond"] && accountT.DefaultNumber > 0 {
 		accountT.DefaultBond, err = util.GetIntResponse(AccountTypeToBond(accountT), accountT.DefaultBond, reader)
 		log.WithField("=>", accountT.DefaultBond).Debug("What the marmots heard")
 		if err != nil {
@@ -200,9 +196,15 @@ func addManualAccountType(accountT []*definitions.MonaxDBAccountType, iterator i
 	thisActT.Perms = make(map[string]bool)
 	for _, perm := range AccountTypeManualPerms() {
 		thisActT.Perms[perm], err = util.GetBoolResponse(AccountTypeManualPermsQuestion(perm), false, reader)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	name, err := util.GetStringResponse(AccountTypeManualSave(), "", reader)
+	if err != nil {
+		return nil, err
+	}
 	if name != "" {
 		thisActT.Name = name
 		if err := SaveAccountType(thisActT); err != nil {

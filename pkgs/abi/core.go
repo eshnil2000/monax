@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/util"
 
 	ethAbi "github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -243,7 +243,7 @@ func packInterfaceValue(typ ethAbi.Type, val string) (interface{}, error) {
 				return int64(val), nil
 			default:
 				val, set := big.NewInt(0).SetString(val, 10)
-				if set != true {
+				if !set {
 					return nil, fmt.Errorf("Could not set to big int")
 				}
 				return val, nil
@@ -276,7 +276,7 @@ func packInterfaceValue(typ ethAbi.Type, val string) (interface{}, error) {
 				return uint64(val), nil
 			default:
 				val, set := big.NewInt(0).SetString(val, 10)
-				if set != true {
+				if !set {
 					return nil, fmt.Errorf("Could not set to big int")
 				}
 				return val, nil

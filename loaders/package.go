@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
 
 	"github.com/spf13/viper"
 )
@@ -30,6 +30,7 @@ func LoadPackage(fileName string) (*definitions.Package, error) {
 		"name": bName,
 	}).Debug("Loading monax jobs file")
 
+	epmJobs.SetConfigType("yaml")
 	epmJobs.AddConfigPath(path)
 	epmJobs.SetConfigName(bName)
 
@@ -43,6 +44,8 @@ func LoadPackage(fileName string) (*definitions.Package, error) {
 		return nil, fmt.Errorf(`Sorry, the marmots could not figure that monax jobs file out. 
 			Please check that your epm.yaml is properly formatted: %v`, err)
 	}
+
+	// TODO more file sanity check (fail before running)
 
 	return pkg, nil
 }

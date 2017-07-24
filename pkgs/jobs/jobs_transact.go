@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/util"
 
 	"github.com/hyperledger/burrow/client"
 	"github.com/hyperledger/burrow/client/rpc"
@@ -110,7 +110,8 @@ func RegisterNameJob(name *definitions.RegisterName, do *definitions.Do) (string
 			}
 
 			n := fmt.Sprintf("%s:%s", record[0], record[1])
-			// TODO: fix this... simple and naive result just now.
+
+			// TODO: write smarter
 			if err = WriteJobResultCSV(n, r); err != nil {
 				return "", err
 			}
@@ -258,6 +259,9 @@ func UnbondJob(unbond *definitions.Unbond, do *definitions.Do) (string, error) {
 	// Process Variables
 	var err error
 	unbond.Account, err = util.PreProcess(unbond.Account, do)
+	if err != nil {
+		return "", err
+	}
 	unbond.Height, err = util.PreProcess(unbond.Height, do)
 	if err != nil {
 		return "", err
@@ -297,6 +301,9 @@ func RebondJob(rebond *definitions.Rebond, do *definitions.Do) (string, error) {
 	// Process Variables
 	var err error
 	rebond.Account, err = util.PreProcess(rebond.Account, do)
+	if err != nil {
+		return "", err
+	}
 	rebond.Height, err = util.PreProcess(rebond.Height, do)
 	if err != nil {
 		return "", err

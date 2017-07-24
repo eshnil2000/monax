@@ -30,7 +30,7 @@ fi
 # Use the current built target, if it exists 
 # Otherwise default to system wide executable
 COMMIT_SHA=$(git rev-parse --short --verify HEAD)
-cli_exec="$GOPATH/src/github.com/monax/cli/target/cli-${COMMIT_SHA}"
+cli_exec="$GOPATH/src/github.com/monax/monax/target/cli-${COMMIT_SHA}"
 if ! [ -e $cli_exec ]
 then
   cli_exec="monax"
@@ -88,7 +88,7 @@ test_setup(){
 
   # make a chain
   $cli_exec clean -y
-  $cli_exec chains make --account-types=Full:1,Participant:1 $chain_name #1>/dev/null
+  $cli_exec chains make --account-types=Full:1,Participant:1 $chain_name --unsafe
   key1_addr=$(cat $chain_dir/addresses.csv | grep $name_full | cut -d ',' -f 1)
   key2_addr=$(cat $chain_dir/addresses.csv | grep $name_part | cut -d ',' -f 1)
   key2_pub=$(cat $chain_dir/accounts.csv | grep $name_part | cut -d ',' -f 1)
@@ -129,7 +129,7 @@ run_test(){
 
   rm -rf ./abi &>/dev/null
   rm -rf ./bin &>/dev/null
-  rm ./jobs_output.json &>/dev/null
+  rm ./epm.output.json &>/dev/null
   rm ./jobs_output.csv &>/dev/null
 
   # Reset for next run
@@ -150,6 +150,25 @@ perform_tests(){
     if [ $test_exit -ne 0 ]
     then
       failing_dir=`pwd`
+      break
+    fi
+  done
+}
+
+perform_tests_that_should_fail(){
+  echo ""
+  goto_base
+  apps=(expected-failure*/)
+  for app in "${apps[@]}"
+  do
+    run_test $app
+
+    # Set exit code properly
+    test_exit=$?
+    if [ $test_exit -ne 0 ]
+    then
+      # actually, this test is meant to pass
+      test_exit=0
       break
     fi
   done
@@ -206,7 +225,10 @@ then
     echo "Running One Test..."
     run_test "$1*/"
   else
-    echo "Running All Tests..."
+    echo "Running tests that should fail"
+    perform_tests_that_should_fail
+
+    echo "Running tests that should pass"
     perform_tests
   fi
 fi

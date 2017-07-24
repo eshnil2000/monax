@@ -5,14 +5,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/testutil"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/testutil"
 )
 
 var dataName string = "dataTest1"
-var newName string = "dataTest2"
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.WarnLevel)

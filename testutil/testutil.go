@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/initialize"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/initialize"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/util"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
@@ -163,11 +163,7 @@ func RemoveContainer(name, t string) error {
 		Force:         true,
 	}
 
-	if err := util.DockerClient.RemoveContainer(opts); err != nil {
-		return err
-	}
-
-	return nil
+	return util.DockerClient.RemoveContainer(opts)
 }
 
 // Remove everything Monax.
@@ -215,9 +211,6 @@ func FakeDefinitionFile(tmpDir, name, definition string) error {
 	defer out.Close()
 
 	_, err = out.WriteString(definition)
-	if err != nil {
-		return err
-	}
 
 	return err
 }
@@ -251,10 +244,7 @@ func TearDown() error {
 	parentPath := filepath.Join(TmpMonaxRoot, "..")
 	os.Chdir(parentPath)
 
-	if err := os.RemoveAll(TmpMonaxRoot); err != nil {
-		return err
-	}
-	return nil
+	return os.RemoveAll(TmpMonaxRoot)
 }
 
 // IfExit exits with an exit code 1 if err is not nil.

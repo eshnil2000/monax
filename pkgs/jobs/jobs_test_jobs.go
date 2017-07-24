@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/pkgs/abi"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/pkgs/abi"
+	"github.com/monax/monax/util"
 
 	"github.com/hyperledger/burrow/client"
 	"github.com/hyperledger/burrow/logging/loggers"
@@ -224,6 +224,8 @@ func AssertJob(assertion *definitions.Assert, do *definitions.Do) (string, error
 		} else {
 			return assertFail("<=", assertion.Key, assertion.Value)
 		}
+	default:
+		return "", fmt.Errorf("Error: Bad assert relation: \"%s\" is not a valid relation. See documentation for more information.", assertion.Relation)
 	}
 
 	return result, nil

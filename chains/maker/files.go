@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
 
 	configurationFile "github.com/hyperledger/burrow/config"
 	"github.com/hyperledger/burrow/genesis"
@@ -157,18 +157,14 @@ func WriteConfigurationFile(chainName, accountName, seeds string, chainImageName
 
 func SaveAccountType(thisActT *definitions.MonaxDBAccountType) error {
 	writer, err := os.Create(filepath.Join(config.AccountsTypePath, fmt.Sprintf("%s.toml", thisActT.Name)))
-	defer writer.Close()
 	if err != nil {
 		return err
 	}
+	defer writer.Close()
 
 	enc := toml.NewEncoder(writer)
 	enc.Indent = ""
-	err = enc.Encode(thisActT)
-	if err != nil {
-		return err
-	}
-	return nil
+	return enc.Encode(thisActT)
 }
 
 func convertExportPortsSliceToString(exportPorts []string) string {
@@ -190,10 +186,11 @@ func writeFile(data []byte, path string) error {
 		return err
 	}
 	writer, err := os.Create(filepath.Join(path))
-	defer writer.Close()
 	if err != nil {
 		return err
 	}
+	defer writer.Close()
+
 	writer.Write(data)
 	return nil
 }

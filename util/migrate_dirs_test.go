@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/log"
 )
 
 var monaxDir string = filepath.Join(os.TempDir(), "monax")
@@ -163,11 +163,7 @@ func testsRemoveDirs(depDirs, newDirs []string) {
 }
 
 func testsTearDown() error {
-	if e := os.RemoveAll(monaxDir); e != nil {
-		return e
-	}
-
-	return nil
+	return os.RemoveAll(monaxDir)
 }
 
 func ifExit(err error) {

@@ -6,11 +6,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/testutil"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/testutil"
+	"github.com/monax/monax/util"
 )
 
 type ab struct {
@@ -116,8 +116,6 @@ func TestLoadChainDefinitionWithoutPath(t *testing.T) {
 func TestLoadChainDefinitionEmptyDefinition(t *testing.T) {
 	const (
 		name = "test"
-
-		defaultDefinition = ``
 	)
 
 	if err := testutil.FakeDefinitionFile(filepath.Join(config.ChainsPath, name), name, ``); err != nil {
@@ -250,7 +248,7 @@ func TestLoadDataDefinition(t *testing.T) {
 	}
 }
 
-/* TODO: [RJ] - https://github.com/monax/cli/issues/1173
+/* TODO: [RJ] - https://github.com/monax/monax/issues/1173
 func TestLoadPackageSimple(t *testing.T) {
 	const (
 		name = "test"

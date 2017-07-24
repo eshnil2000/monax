@@ -7,14 +7,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
 )
 
 func PreProcess(toProcess string, do *definitions.Do) (string, error) {
 	// $block.... $account.... etc. should be caught. hell$$o should not
 	// :$libAddr needs to be caught
-	catchEr := regexp.MustCompile("(^|\\s|:)\\$([a-zA-Z0-9_.]+)")
+	catchEr := regexp.MustCompile(`(^|\s|:)\$([a-zA-Z0-9_.]+)`)
 	// If there's a match then run through the replacement process
 	if catchEr.MatchString(toProcess) {
 		log.WithField("match", toProcess).Debug("Replacement Match Found")
@@ -27,12 +27,7 @@ func PreProcess(toProcess string, do *definitions.Do) (string, error) {
 			varName := "$" + jobName
 			var innerVarName string
 			var wantsInnerValues bool = false
-			/*
-				log.WithFields(log.Fields{
-				 	"var": varName,
-				 	"job": jobName,
-				}).Debugf("Correcting match %d", i+1)
-			*/
+
 			// first parse the reserved words.
 			if strings.Contains(jobName, "block") {
 				block, err := replaceBlockVariable(toProcess, do)
@@ -102,7 +97,7 @@ func replaceBlockVariable(toReplace string, do *definitions.Do) (string, error) 
 		return block, nil
 	}
 
-	catchEr := regexp.MustCompile("\\$block\\+(\\d*)")
+	catchEr := regexp.MustCompile(`\$block\+(\d*)`)
 	if catchEr.MatchString(toReplace) {
 		height := catchEr.FindStringSubmatch(toReplace)[1]
 		h1, err := strconv.Atoi(height)
@@ -118,7 +113,7 @@ func replaceBlockVariable(toReplace string, do *definitions.Do) (string, error) 
 		return height, nil
 	}
 
-	catchEr = regexp.MustCompile("\\$block\\-(\\d*)")
+	catchEr = regexp.MustCompile(`\$block\-(\d*)`)
 	if catchEr.MatchString(toReplace) {
 		height := catchEr.FindStringSubmatch(toReplace)[1]
 		h1, err := strconv.Atoi(height)
@@ -145,7 +140,6 @@ func PreProcessInputData(function string, data interface{}, do *definitions.Do, 
 		if reflect.TypeOf(data).Kind() == reflect.Slice {
 			return "", []string{""}, fmt.Errorf("Incorrect formatting of epm.yaml. Please update it to include a function field.")
 		}
-		log.Warn("Deprecation Warning: The use of the 'data' field to specify the name of the contract function has been deprecated. Please update your epm.yaml file to use a combination of 'function' and 'data' fields instead. See documentation for further details.")
 		function = strings.Split(data.(string), " ")[0]
 		callArray = strings.Split(data.(string), " ")[1:]
 		for _, val := range callArray {
@@ -205,11 +199,6 @@ func PreProcessLibs(libs string, do *definitions.Do) (string, error) {
 	libraries, _ := PreProcess(libs, do)
 	if libraries != "" {
 		pairs := strings.Split(libraries, ",")
-		for _, pair := range pairs {
-			libAndAddr := strings.Split(pair, ":")
-			libAndAddr[1] = strings.ToLower(libAndAddr[1])
-			pair = strings.Join(libAndAddr, ":")
-		}
 		libraries = strings.Join(pairs, " ")
 	}
 	log.WithField("=>", libraries).Debug("Library String")

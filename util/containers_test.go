@@ -5,9 +5,9 @@ import (
 	"path"
 	"testing"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/version"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/version"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
@@ -286,19 +286,19 @@ func TestFindContainer(t *testing.T) {
 	create(definitions.TypeService, name)
 	start(ContainerName(definitions.TypeService, name))
 
-	if FindContainer(ContainerName(definitions.TypeData, name), false) == false {
+	if !FindContainer(ContainerName(definitions.TypeData, name), false) {
 		t.Fatalf("expecting to find data container existing")
 	}
 
-	if FindContainer(ContainerName(definitions.TypeData, name), true) == true {
+	if FindContainer(ContainerName(definitions.TypeData, name), true) {
 		t.Fatalf("expecting to find data container not running")
 	}
 
-	if FindContainer(ContainerName(definitions.TypeService, name), false) == false {
+	if !FindContainer(ContainerName(definitions.TypeService, name), false) {
 		t.Fatalf("expecting to find service container existing")
 	}
 
-	if FindContainer(ContainerName(definitions.TypeService, name), true) == false {
+	if !FindContainer(ContainerName(definitions.TypeService, name), true) {
 		t.Fatalf("expecting to find service container running")
 	}
 }
@@ -333,16 +333,4 @@ func create(t, name string) error {
 
 func start(name string) error {
 	return DockerError(DockerClient.StartContainer(name, nil))
-}
-
-func stop(name string) error {
-	return DockerError(DockerClient.StopContainer(name, 10))
-}
-
-func remove(name string) error {
-	return DockerClient.RemoveContainer(docker.RemoveContainerOptions{
-		ID:            name,
-		RemoveVolumes: true,
-		Force:         true,
-	})
 }

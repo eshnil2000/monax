@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/services"
-	"github.com/monax/cli/testutil"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/services"
+	"github.com/monax/monax/testutil"
+	"github.com/monax/monax/util"
 )
 
 func TestMain(m *testing.M) {
@@ -217,6 +217,9 @@ func TestImportKeyAll(t *testing.T) {
 
 	// start keys
 	keyClient, err = InitKeyClient()
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
 	defer testKillService(t, "keys", true)
 
 	if err := keyClient.ImportKey("", true); err != nil {
@@ -228,7 +231,7 @@ func TestImportKeyAll(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[strings.TrimSpace(out)] == true {
+		if addrs[strings.TrimSpace(out)] {
 			i++
 		}
 	}
@@ -266,7 +269,7 @@ func TestExportKeyAll(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[strings.TrimSpace(out)] == true {
+		if addrs[strings.TrimSpace(out)] {
 			i++
 		}
 	}
@@ -300,7 +303,7 @@ func TestListKeyContainer(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[strings.TrimSpace(out)] == true {
+		if addrs[strings.TrimSpace(out)] {
 			i++
 		}
 	}
@@ -334,7 +337,7 @@ func TestListKeyHost(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[strings.TrimSpace(out)] == true {
+		if addrs[strings.TrimSpace(out)] {
 			i++
 		}
 	}

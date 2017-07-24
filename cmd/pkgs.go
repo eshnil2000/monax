@@ -1,17 +1,11 @@
-// +build !arm
-
 package commands
 
 import (
 	"fmt"
-	"os"
 	"runtime"
-	"strconv"
-	"strings"
 
-	"github.com/monax/cli/pkgs"
-	"github.com/monax/cli/util"
-	"github.com/monax/cli/version"
+	"github.com/monax/monax/pkgs"
+	"github.com/monax/monax/util"
 
 	"github.com/spf13/cobra"
 )
@@ -41,31 +35,25 @@ in a package definition file`,
 
 func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain name to be used for deployment")
-	// TODO links keys
+	packagesDo.Flags().StringVarP(&do.ChainURL, "chain-url", "", "", "chain-url to be used in tcp://IP:PORT format (only necessary for cluster and remote operations)")
 	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", defaultSigner(), "IP:PORT of keys daemon which jobs should use")
-	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")              //what's this actually used for?
-	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "json", "output format which should be used [csv,json]") // [zr] this is not well tested!
-	packagesDo.Flags().StringVarP(&do.YAMLPath, "file", "f", "./epm.yaml", "path to package file which jobs should use")
+	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")
+	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "epm.output.json", "filename for jobs output file. by default, this name will reflect the name passed in on the optional [--file]")
+	packagesDo.Flags().StringVarP(&do.YAMLPath, "file", "f", "epm.yaml", "path to package file which jobs should use. if also using the --dir flag, give the relative path to jobs file, which should be in the same directory")
 	packagesDo.Flags().StringSliceVarP(&do.DefaultSets, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the jobs file is ran (and after default address")
-	packagesDo.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts jobs should use")
+	// the package manager does not use this flag!
+	// packagesDo.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts jobs should use")
 	packagesDo.Flags().StringVarP(&do.BinPath, "bin-path", "", "./bin", "path to the bin directory jobs should use when saving binaries after the compile process")
 	packagesDo.Flags().StringVarP(&do.ABIPath, "abi-path", "", "./abi", "path to the abi directory jobs should use when saving ABIs after the compile process")
 	packagesDo.Flags().StringVarP(&do.DefaultGas, "gas", "g", "1111111111", "default gas to use; can be overridden for any single job")
-	packagesDo.Flags().StringVarP(&do.Compiler, "compiler", "l", formCompilers(), "IP:PORT of compiler which Monax jobs should use")
 	packagesDo.Flags().StringVarP(&do.DefaultAddr, "address", "a", "", "default address to use; operates the same way as the [account] job, only before the epm file is ran")
 	packagesDo.Flags().StringVarP(&do.DefaultFee, "fee", "n", "9999", "default fee to use")
 	packagesDo.Flags().StringVarP(&do.DefaultAmount, "amount", "u", "9999", "default amount to use")
 	packagesDo.Flags().BoolVarP(&do.Overwrite, "overwrite", "t", true, "overwrite jobs of the same name")
-	packagesDo.Flags().BoolVarP(&do.RemoteCompiler, "remote-compiler", "r", false, "use a remote compiler; if set uses the url specified with the compiler flag.")
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(0, "eq", cmd, args))
-	if do.Path == "" {
-		var err error
-		do.Path, err = os.Getwd()
-		util.IfExit(err)
-	}
 	if do.ChainName == "" {
 		util.IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
 	}
@@ -74,14 +62,6 @@ func PackagesDo(cmd *cobra.Command, args []string) {
 	}
 
 	util.IfExit(pkgs.RunPackage(do))
-}
-
-func formCompilers() string {
-	verSplit := strings.Split(version.VERSION, ".")
-	maj, _ := strconv.Atoi(verSplit[0])
-	min, _ := strconv.Atoi(verSplit[1])
-	pat, _ := strconv.Atoi(verSplit[2])
-	return fmt.Sprintf("https://compilers.monax.io:1%01d%02d%01d", maj, min, pat)
 }
 
 func defaultSigner() string {

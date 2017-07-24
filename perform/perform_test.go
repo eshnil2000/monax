@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/loaders"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/testutil"
-	"github.com/monax/cli/util"
-	"github.com/monax/cli/version"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/loaders"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/testutil"
+	"github.com/monax/monax/util"
+	"github.com/monax/monax/version"
 )
 
 func TestMain(m *testing.M) {
@@ -950,12 +950,12 @@ func TestContainerExistsSimple(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if exists := ContainerExists(srv.Operations.SrvContainerName); exists != true {
+	if exists := ContainerExists(srv.Operations.SrvContainerName); !exists {
 		t.Fatalf("expecting service container existing, got false")
 	}
 
 	srv.Operations.SrvContainerName = srv.Operations.DataContainerName
-	if exists := ContainerExists(srv.Operations.SrvContainerName); exists != true {
+	if exists := ContainerExists(srv.Operations.SrvContainerName); !exists {
 		t.Fatalf("expecting data container existing, got false")
 	}
 }
@@ -977,7 +977,7 @@ func TestContainerExistsBadName(t *testing.T) {
 	}
 
 	srv.Operations.SrvContainerName = "some-random-name"
-	if exists := ContainerExists(srv.Operations.SrvContainerName); exists != false {
+	if exists := ContainerExists(srv.Operations.SrvContainerName); exists {
 		t.Fatalf("expecting service container not existing, got true")
 	}
 }
@@ -1002,13 +1002,13 @@ func TestContainerExistsAfterRemove(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if exists := ContainerExists(srv.Operations.SrvContainerName); exists == false {
+	if exists := ContainerExists(srv.Operations.SrvContainerName); !exists {
 		t.Fatalf("expecting service container exists, got false")
 	}
 
 	testutil.RemoveContainer(name, definitions.TypeService)
 
-	if exists := ContainerExists(srv.Operations.SrvContainerName); exists == true {
+	if exists := ContainerExists(srv.Operations.SrvContainerName); exists {
 		t.Fatalf("expecting service container not existing after remove, got true")
 	}
 }
@@ -1033,12 +1033,12 @@ func TestContainerRunningSimple(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if running := ContainerRunning(srv.Operations.SrvContainerName); running == false {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); !running {
 		t.Fatalf("expecting service container running, got false")
 	}
 
 	srv.Operations.SrvContainerName = srv.Operations.DataContainerName
-	if running := ContainerRunning(srv.Operations.SrvContainerName); running == true {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); running {
 		t.Fatalf("expecting data container not running, got true")
 	}
 }
@@ -1063,12 +1063,12 @@ func TestContainerRunningBadName(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if running := ContainerRunning(srv.Operations.SrvContainerName); running == false {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); !running {
 		t.Fatalf("expecting service container running, got false")
 	}
 
 	srv.Operations.SrvContainerName = "random-bad-name"
-	if running := ContainerRunning(srv.Operations.SrvContainerName); running == true {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); running {
 		t.Fatalf("expecting data container not running, got true")
 	}
 }
@@ -1093,13 +1093,13 @@ func TestContainerRunningAfterRemove(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if running := ContainerRunning(srv.Operations.SrvContainerName); running == false {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); !running {
 		t.Fatalf("expecting service container exists, got false")
 	}
 
 	testutil.RemoveContainer(name, definitions.TypeService)
 
-	if running := ContainerRunning(srv.Operations.SrvContainerName); running == true {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); running {
 		t.Fatalf("expecting service container not existing after remove, got true")
 	}
 }
@@ -1662,7 +1662,7 @@ func TestPullBadName(t *testing.T) {
 }
 
 // TODO: [ben] issue-1262: perform/TestLogsSimple fails
-// https://github.com/monax/cli/issues/1262
+// https://github.com/monax/monax/issues/1262
 func testLogsSimple(t *testing.T) {
 	const (
 		name = "compilers"
@@ -2024,132 +2024,6 @@ func TestInspectBadName(t *testing.T) {
 	srv.Operations.SrvContainerName = "bad name"
 	if err := DockerInspect(srv.Service, srv.Operations, "all"); err == nil {
 		t.Fatalf("expected inspect to fail")
-	}
-}
-
-func TestRenameSimple(t *testing.T) {
-	const (
-		name    = "testdata"
-		newName = "newname"
-	)
-
-	defer testutil.RemoveAllContainers()
-
-	if util.Exists(definitions.TypeService, name) {
-		t.Fatalf("expecting service container doesn't exist")
-	}
-
-	ops := loaders.LoadDataDefinition(name)
-	if err := DockerCreateData(ops); err != nil {
-		t.Fatalf("expected data container created, got %v", err)
-	}
-
-	if err := DockerRename(ops, newName); err != nil {
-		t.Fatalf("expected container renamed, got %v", err)
-	}
-
-	if util.Exists(definitions.TypeData, name) {
-		t.Fatalf("expecting old data container doesn't exist")
-	}
-
-	if !util.Exists(definitions.TypeData, newName) {
-		t.Fatalf("expecting renamed data container exists")
-	}
-}
-
-func TestRenameEmptyName(t *testing.T) {
-	const (
-		name    = "compilers"
-		newName = ""
-	)
-
-	defer testutil.RemoveAllContainers()
-
-	if util.Exists(definitions.TypeService, name) {
-		t.Fatalf("expecting service container doesn't exist")
-	}
-
-	srv, err := loaders.LoadServiceDefinition(name)
-	if err != nil {
-		t.Fatalf("could not load service definition %v", err)
-	}
-
-	if err := DockerRunService(srv.Service, srv.Operations); err != nil {
-		t.Fatalf("expected service container created, got %v", err)
-	}
-
-	if !util.Running(definitions.TypeService, name) {
-		t.Fatalf("expecting service container running")
-	}
-
-	if err := DockerRename(srv.Operations, newName); err == nil {
-		t.Fatalf("expected empty name rename to fail")
-	}
-}
-
-func TestRenameServiceStopped(t *testing.T) {
-	const (
-		name    = "compilers"
-		newName = "newname"
-	)
-
-	defer testutil.RemoveAllContainers()
-
-	if util.Exists(definitions.TypeService, name) {
-		t.Fatalf("expecting service container doesn't exist")
-	}
-
-	srv, err := loaders.LoadServiceDefinition(name)
-	if err != nil {
-		t.Fatalf("could not load service definition %v", err)
-	}
-
-	if err := DockerRunService(srv.Service, srv.Operations); err != nil {
-		t.Fatalf("expected service container created, got %v", err)
-	}
-	if err := DockerStop(srv.Service, srv.Operations, 5); err != nil {
-		t.Fatalf("expected service container be stopped, got %v", err)
-	}
-
-	if util.Running(definitions.TypeService, name) {
-		t.Fatalf("expecting service container doesn't run")
-	}
-	if !util.Exists(definitions.TypeService, name) {
-		t.Fatalf("expecting service container exist")
-	}
-
-	if err := DockerRename(srv.Operations, newName); err != nil {
-		t.Fatalf("expected container renamed, got %v", err)
-	}
-
-	if util.Exists(definitions.TypeService, name) {
-		t.Fatalf("expecting old service container doesn't exist")
-	}
-
-	if util.Running(definitions.TypeService, newName) {
-		t.Fatalf("expecting new service container doesn't run")
-	}
-	if !util.Exists(definitions.TypeService, newName) {
-		t.Fatalf("expecting new service container exist")
-	}
-}
-
-func TestRenameBadName(t *testing.T) {
-	const (
-		name    = "compilers"
-		newName = "newname"
-	)
-
-	defer testutil.RemoveAllContainers()
-
-	srv, err := loaders.LoadServiceDefinition(name)
-	if err != nil {
-		t.Fatalf("could not load service definition %v", err)
-	}
-
-	srv.Operations.SrvContainerName = "bad name"
-	if err := DockerRename(srv.Operations, newName); err == nil {
-		t.Fatalf("expected rename to fail, got nil")
 	}
 }
 

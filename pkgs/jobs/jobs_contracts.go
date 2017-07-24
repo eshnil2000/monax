@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/pkgs/abi"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/pkgs/abi"
+	"github.com/monax/monax/util"
 
 	compilers "github.com/monax/compilers/perform"
 
@@ -21,14 +21,6 @@ import (
 	"github.com/hyperledger/burrow/logging/loggers"
 	"github.com/hyperledger/burrow/txs"
 )
-
-func PackageDeployJob(pkgDeploy *definitions.PackageDeploy, do *definitions.Do) (string, error) {
-	// todo
-	// note: we should have this talking to a new client package...add that to the todo
-	var result string
-
-	return result, nil
-}
 
 func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, err error) {
 	// Preprocess variables
@@ -249,8 +241,9 @@ func deployRaw(do *definitions.Do, deploy *definitions.Deploy, contractName, con
 	}).Warn("Deploying Contract")
 
 	log.WithFields(log.Fields{
-		"source": deploy.Source,
-		"code":   contractCode,
+		"source":    deploy.Source,
+		"code":      contractCode,
+		"chain-url": do.ChainURL,
 	}).Info()
 
 	monaxNodeClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())

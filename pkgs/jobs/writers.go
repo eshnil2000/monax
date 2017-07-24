@@ -7,29 +7,27 @@ import (
 	"path/filepath"
 )
 
-const LogFileNameCSV = "jobs_output.csv"
-const LogFileNameJSON = "jobs_output.json"
-
-func ClearJobResults() error {
-	if err := os.Remove(setJsonPath()); err != nil {
-		return err
-	}
-
-	return os.Remove(setCsvPath())
-}
-
+// [zr] this should go (currently used by the nameReg writer)
 // WriteJobResultCSV takes two strings and writes those to the delineated log
 // file, which is currently epm.log in the same directory as the epm.yaml
 func WriteJobResultCSV(name, result string) error {
-	logFile := setCsvPath()
+
+	pwd, _ := os.Getwd()
+	logFile := filepath.Join(pwd, "jobs_output.csv")
 
 	var file *os.File
 	var err error
 
 	if _, err := os.Stat(logFile); os.IsNotExist(err) {
 		file, err = os.Create(logFile)
+		if err != nil {
+			return err
+		}
 	} else {
 		file, err = os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 0600)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err != nil {
@@ -39,17 +37,17 @@ func WriteJobResultCSV(name, result string) error {
 	defer file.Close()
 
 	text := fmt.Sprintf("%s,%s\n", name, result)
-	if _, err = file.WriteString(text); err != nil {
-		return err
-	}
+	_, err = file.WriteString(text)
 
-	return nil
+	return err
 }
 
-func WriteJobResultJSON(results map[string]string) error {
-	logFile := setJsonPath()
+func WriteJobResultJSON(results map[string]string, logFile string) error {
 
 	file, err := os.Create(logFile)
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
 	res, err := json.MarshalIndent(results, "", "  ")
@@ -61,14 +59,4 @@ func WriteJobResultJSON(results map[string]string) error {
 	}
 
 	return nil
-}
-
-func setJsonPath() string {
-	pwd, _ := os.Getwd()
-	return filepath.Join(pwd, LogFileNameJSON)
-}
-
-func setCsvPath() string {
-	pwd, _ := os.Getwd()
-	return filepath.Join(pwd, LogFileNameCSV)
 }

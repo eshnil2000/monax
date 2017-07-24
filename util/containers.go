@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/version"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/version"
 
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
@@ -199,7 +199,7 @@ func MonaxContainers(filter func(name string, details *Details) bool, running bo
 
 	// Initialized cache means that it contains information
 	// about all containers, not just the running ones.
-	if running == false {
+	if !running {
 		containerCache.initialized = true
 	}
 	return monaxContainers
@@ -407,11 +407,9 @@ func PullImage(image string, writer io.Writer) error {
 		defer w.Close()
 		defer close(timeout)
 
-		select {
-		case <-time.After(timeoutDuration):
-			log.Warn("image pull timed out (%v)", timeoutDuration)
-			timeout <- ErrImagePullTimeout
-		}
+		<-time.After(timeoutDuration)
+		log.Warn("image pull timed out (%v)", timeoutDuration)
+		timeout <- ErrImagePullTimeout
 	}()
 	go jsonmessage.DisplayJSONMessagesStream(r, os.Stdout, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
 	select {

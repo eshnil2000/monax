@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
@@ -180,7 +180,7 @@ func canWeRemove(toClean map[string]bool) bool {
 		"images":     "all",
 	}
 
-	if toClean["all"] != true {
+	if !toClean["all"] {
 		log.Warn("The marmots are about to remove the following")
 		if toClean["containers"] {
 			log.WithField("containers", toWarn["containers"]).Warn()

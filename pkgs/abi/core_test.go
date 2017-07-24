@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	pm "github.com/monax/cli/definitions"
+	pm "github.com/monax/monax/definitions"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -140,7 +140,7 @@ func TestPacker(t *testing.T) {
 		if output, err := Packer(test.ABI, test.name, test.args...); err != nil {
 			t.Error("Unexpected error in ", test.name, ": ", err)
 		} else {
-			if bytes.Compare(output[4:], test.expectedOutput) != 0 {
+			if !bytes.Equal(output[4:], test.expectedOutput) {
 				t.Errorf("Incorrect output,\n\t expected %v,\n\t got %v", test.expectedOutput, output[4:])
 			}
 		}

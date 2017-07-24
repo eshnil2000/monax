@@ -9,7 +9,7 @@
 #
 #  2. `github-release` utility installed (go get github.com/aktau/github-release)
 #     and GITHUB_TOKEN environment variable set
-#    (with release permissions for github.com/monax/cli).
+#    (with release permissions for github.com/monax/monax).
 #
 #  2.a `xgo` installed for cross-compilation:
 #
@@ -39,7 +39,7 @@
 #
 #  8. Environment variables pointing to s3 buckets
 #
-REPO=${GOPATH}/src/github.com/monax/cli
+REPO=${GOPATH}/src/github.com/monax/monax
 BUILD_DIR=${REPO}/builds
 vers=$(grep -w VERSION ${REPO}/version/version.go | cut -d \  -f 4 | tr -d '"')
 MONAX_VERSION=${MONAX_VERSION:-$vers}
@@ -53,6 +53,7 @@ MONAX_BRANCH=${MONAX_BRANCH:-release-$MONAX_VERSION_MINOR}
 # export AWS_ACCESS_KEY=
 # export AWS_SECRET_ACCESS_KEY=
 
+export AWS_DEFAULT_REGION=eu-central-1
 export AWS_S3_PKGS_BUCKET=code.monax.io/pkgs
 export AWS_S3_PKGS_URL=pkgs.monax.io
 export AWS_S3_RPM_URL=${AWS_S3_PKGS_URL}/yum
@@ -124,11 +125,11 @@ cross_compile() {
   pushd ${REPO}/cmd/monax
   echo "Starting cross compile"
 
-  LDFLAGS="-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
+  LDFLAGS="-X github.com/monax/monax/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 
-  xgo -go 1.7 -branch ${MONAX_BRANCH} --targets=linux/amd64,linux/386,darwin/amd64,darwin/386 -dest ${BUILD_DIR}/ -out monax-${MONAX_VERSION} --pkg cmd/monax github.com/monax/cli
+  xgo -go 1.7 -branch ${MONAX_BRANCH} --targets=linux/amd64,linux/386,darwin/amd64,darwin/386 -dest ${BUILD_DIR}/ -out monax-${MONAX_VERSION} --pkg cmd/monax github.com/monax/monax
   # todo add build number
-  aws s3 cp ${REPO}/CHANGELOG.md s3://${AWS_S3_PKGS_BUCKET}/dl/CHANGELOG
+  aws s3 cp ${REPO}/CHANGELOG.md s3://${AWS_S3_PKGS_BUCKET}/dl/CHANGELOG --acl public-read
   echo "Cross compile completed"
   echo ""
   echo ""
@@ -146,7 +147,7 @@ release_binaries() {
   for file in *
   do
     echo "Uploading: ${file}"
-    aws s3 cp ${file} s3://${AWS_S3_PKGS_BUCKET}/dl/${file}
+    aws s3 cp ${file} s3://${AWS_S3_PKGS_BUCKET}/dl/${file} --acl public-read
     desc+=$(echo -e "\n* ${file}\n\n\`\`\`bash\nsudo curl -L https://${AWS_S3_PKGS_URL}/dl/${file} >/usr/local/bin/monax\nsudo chmod +x /usr/local/bin/monax\n\`\`\`")
   done
   popd
@@ -159,7 +160,7 @@ release_binaries() {
   then
     github-release release \
       --user monax \
-      --repo cli \
+      --repo monax \
       --tag v${LATEST_TAG} \
       --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}" \
@@ -167,7 +168,7 @@ release_binaries() {
   else
     github-release release \
       --user monax \
-      --repo cli \
+      --repo monax \
       --tag v${LATEST_TAG} \
       --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}"
@@ -175,7 +176,7 @@ release_binaries() {
     then
       github-release edit \
         --user monax \
-        --repo cli \
+        --repo monax \
         --tag v${LATEST_TAG} \
         --name "Release of Version: ${LATEST_TAG}" \
         --description "${DESCRIPTION}"
@@ -210,7 +211,7 @@ release_deb() {
     -e MONAX_RELEASE=${MONAX_RELEASE} \
     -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-    -e AWS_DEFAULT_REGION=eu-central-1 \
+    -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} \
     -e AWS_S3_PKGS_BUCKET=${AWS_S3_PKGS_BUCKET} \
     -e AWS_S3_PKGS_URL=${AWS_S3_PKGS_URL} \
     -e KEY_NAME="${KEY_NAME}" \
@@ -244,7 +245,7 @@ release_rpm() {
     -e MONAX_RELEASE=${MONAX_RELEASE} \
     -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-    -e AWS_DEFAULT_REGION=eu-central-1 \
+    -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} \
     -e AWS_S3_PKGS_BUCKET=${AWS_S3_PKGS_BUCKET} \
     -e AWS_S3_PKGS_URL=${AWS_S3_PKGS_URL} \
     -e KEY_NAME="${KEY_NAME}" \

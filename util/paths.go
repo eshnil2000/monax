@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/log"
 )
 
 func GetFileByNameAndType(typ, name string) string {
@@ -89,12 +89,7 @@ func MoveOutOfDirAndRmDir(src, dst string) error {
 	}
 
 	log.WithField("=>", src).Info("Removing directory")
-	err = os.RemoveAll(src)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return os.RemoveAll(src)
 }
 
 // CopyFile copies from src to dst until either EOF is reached on src or
@@ -182,11 +177,7 @@ func CopyTree(src, dst string) error {
 		return nil
 	}
 
-	if err := filepath.Walk(cleanSrc, copyWalker); err != nil {
-		return err
-	}
-
-	return nil
+	return filepath.Walk(cleanSrc, copyWalker)
 }
 
 // MoveTree copies the src directory to dst and removes the src

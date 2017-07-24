@@ -2,32 +2,74 @@ package pkgs
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/loaders"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/pkgs/jobs"
-	"github.com/monax/cli/services"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/loaders"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/pkgs/jobs"
+	"github.com/monax/monax/services"
+	"github.com/monax/monax/util"
 )
 
 func RunPackage(do *definitions.Do) error {
-
-	// clears job_outputs file
-	jobs.ClearJobResults()
-	// useful for debugging
-	printPathPackage(do)
-
-	// sets do.ChainIP and do.ChainPort
-	if err := setChainIPandPort(do); err != nil {
-		return err
+	var gotwd string
+	if do.Path == "" {
+		var err error
+		gotwd, err = os.Getwd()
+		if err != nil {
+			return err
+		}
+		do.Path = gotwd
 	}
 
-	do.ChainURL = fmt.Sprintf("tcp://%s:%s", do.ChainIP, do.ChainPort)
+	if do.ChainURL == "" {
+		// sets do.ChainIP and do.ChainPort if do.ChainURL is not populated
+		if err := setChainIPandPort(do); err != nil {
+			return err
+		}
+		do.ChainURL = fmt.Sprintf("tcp://%s:%s", do.ChainIP, do.ChainPort)
+	}
+
 	if err := util.GetChainID(do); err != nil {
 		return err
 	}
+
+	// note: [zr] this could be problematic with a combo of
+	// other flags, however, at least the --dir flag isn't
+	// completely broken now
+	if do.Path != gotwd {
+		originalYAMLPath := do.YAMLPath
+
+		// if --dir given, assume *.yaml is in there
+		do.YAMLPath = filepath.Join(do.Path, originalYAMLPath)
+
+		// if do.YAMLPath does not exist, try $pwd
+		if _, err := os.Stat(do.YAMLPath); os.IsNotExist(err) {
+			do.YAMLPath = filepath.Join(gotwd, originalYAMLPath)
+		}
+
+		// if it still cannot be found, abort
+		if _, err := os.Stat(do.YAMLPath); os.IsNotExist(err) {
+			return fmt.Errorf("could not find jobs file (%s), ensure correct used of the --file flag")
+		}
+
+		if do.BinPath == "./bin" {
+			do.BinPath = filepath.Join(do.Path, "bin")
+		}
+		if do.ABIPath == "./abi" {
+			do.ABIPath = filepath.Join(do.Path, "abi")
+		}
+		// TODO enable this feature
+		// if do.ContractsPath == "./contracts" {
+		//do.ContractsPath = filepath.Join(do.Path, "contracts")
+		//}
+	}
+
+	// useful for debugging
+	printPathPackage(do)
 
 	var err error
 	// Load the package if it doesn't exist
@@ -38,20 +80,26 @@ func RunPackage(do *definitions.Do) error {
 		}
 	}
 
-	if !do.RemoteCompiler {
-		if err := bootCompiler(); err != nil {
-			return err
+	if do.Path != gotwd {
+		for _, job := range do.Package.Jobs {
+			if job.Deploy != nil {
+				job.Deploy.Contract = filepath.Join(do.Path, job.Deploy.Contract)
+			}
 		}
-		if err = getLocalCompilerData(do); err != nil {
-			return err
-		}
+	}
+
+	// should be EnsureRunning
+	if err := bootCompiler(); err != nil {
+		return err
+	}
+	if err = getLocalCompilerData(do); err != nil {
+		return err
 	}
 
 	return jobs.RunJobs(do)
 }
 
 func setChainIPandPort(do *definitions.Do) error {
-
 	if !util.IsChain(do.ChainName, true) {
 		return fmt.Errorf("chain (%s) is not running", do.ChainName)
 	}
@@ -116,7 +164,8 @@ func getLocalCompilerData(do *definitions.Do) error {
 
 func printPathPackage(do *definitions.Do) {
 	log.WithField("=>", do.Compiler).Info("Using Compiler at")
-	log.WithField("=>", do.ChainName).Info("Using Chain at")
-	log.WithField("=>", do.ChainID).Debug("With ChainID")
+	log.WithField("=>", do.ChainName).Info("Using ChainName")
+	log.WithField("=>", do.ChainID).Info("With ChainID")
+	log.WithField("=>", do.ChainURL).Info("With ChainURL")
 	log.WithField("=>", do.Signer).Info("Using Signer at")
 }

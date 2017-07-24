@@ -1,8 +1,8 @@
 package clean
 
 import (
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/util"
 )
 
 func Clean(do *definitions.Do) error {
@@ -16,8 +16,5 @@ func Clean(do *definitions.Do) error {
 		"root":       do.RmD,
 		"images":     do.Images,
 	}
-	if err := util.Clean(toClean); err != nil {
-		return err
-	}
-	return nil
+	return util.Clean(toClean)
 }

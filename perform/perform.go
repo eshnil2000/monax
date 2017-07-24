@@ -13,13 +13,14 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"unicode"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/util"
-	"github.com/monax/cli/version"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/util"
+	"github.com/monax/monax/version"
 
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
@@ -324,11 +325,10 @@ func DockerExecService(srv *definitions.Service, ops *definitions.Operation) (bu
 		"user":            optsServ.Config.User,
 		"vols":            optsServ.HostConfig.Binds,
 	}).Info("Executing interactive container")
-	if err := startInteractiveContainer(optsServ, ops.Terminal); err != nil {
-		return buf, err
-	}
 
-	return buf, nil
+	err = startInteractiveContainer(optsServ, ops.Terminal)
+
+	return buf, err
 }
 
 // DockerRebuild recreates the container based on the srv settings template.
@@ -487,99 +487,6 @@ func DockerStop(srv *definitions.Service, ops *definitions.Operation, timeout ui
 	}
 
 	log.WithField("=>", ops.SrvContainerName).Info("Container stopped")
-
-	return nil
-}
-
-// DockerRename renames the container by removing and recreating it. The container
-// is also restarted if it was running before rename. The container ops.SrvContainerName
-// is renamed to a new name, constructed using a short given newName.
-// DockerRename returns Docker errors on exit or ErrContainerExists
-// if the container with the new (long) name exists.
-//
-//  ops.SrvContainerName  - container name
-//  ops.ContainerType     - container type
-//  ops.Labels            - container creation time labels
-//
-func DockerRename(ops *definitions.Operation, newName string) error {
-	longNewName := util.ContainerName(ops.ContainerType, newName)
-
-	log.WithFields(log.Fields{
-		"from": ops.SrvContainerName,
-		"to":   longNewName,
-	}).Info("Renaming container")
-
-	log.WithField("=>", ops.SrvContainerName).Debug("Checking container exists")
-	container, err := util.DockerClient.InspectContainer(ops.SrvContainerName)
-	if err != nil {
-		return util.DockerError(err)
-	}
-
-	log.WithField("=>", longNewName).Debug("Checking new container exists")
-	_, err = util.DockerClient.InspectContainer(longNewName)
-	if err == nil {
-		return ErrContainerExists
-	}
-
-	// Mark if the container's running to restart it later.
-	wasRunning := ContainerRunning(ops.SrvContainerName)
-	if wasRunning {
-		log.Debug("Stopping old container")
-		if err := util.DockerClient.StopContainer(container.ID, 5); err != nil {
-			log.Debug("Container not stopped")
-		}
-	}
-
-	log.Debug("Removing container")
-	removeOpts := docker.RemoveContainerOptions{
-		ID:            container.ID,
-		RemoveVolumes: true,
-		Force:         true,
-	}
-	if err := util.DockerClient.RemoveContainer(removeOpts); err != nil {
-		return util.DockerError(err)
-	}
-
-	log.Debug("Creating new container")
-	createOpts := docker.CreateContainerOptions{
-		Name:       longNewName,
-		Config:     container.Config,
-		HostConfig: container.HostConfig,
-	}
-
-	// If VolumesFrom contains links to non-existent containers, remove them.
-	var newVolumesFrom []string
-	for _, name := range createOpts.HostConfig.VolumesFrom {
-		_, err = util.DockerClient.InspectContainer(name)
-		if err != nil {
-			continue
-		}
-
-		name = strings.TrimSuffix(name, ":ro")
-		name = strings.TrimSuffix(name, ":rw")
-
-		newVolumesFrom = append(newVolumesFrom, name)
-	}
-	createOpts.HostConfig.VolumesFrom = newVolumesFrom
-
-	// Rename labels.
-	createOpts.Config.Labels = util.Labels(newName, ops)
-
-	newContainer, err := util.DockerClient.CreateContainer(createOpts)
-	if err != nil {
-		log.Debug("Container not created")
-		return util.DockerError(err)
-	}
-
-	// Was running before remove.
-	if wasRunning {
-		err := util.DockerClient.StartContainer(newContainer.ID, nil)
-		if err != nil {
-			log.Debug("Container not restarted")
-		}
-	}
-
-	log.WithField("=>", longNewName).Info("Container renamed to")
 
 	return nil
 }
@@ -773,7 +680,7 @@ func startContainer(opts docker.CreateContainerOptions) error {
 func startInteractiveContainer(opts docker.CreateContainerOptions, terminal bool) error {
 	// Trap signals so we can drop out of the container.
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
 		log.WithField("=>", opts.Name).Info("Caught signal. Stopping container")

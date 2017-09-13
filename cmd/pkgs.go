@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/monax/monax/pkgs"
-	"github.com/monax/monax/util"
+	"github.com/eshnil2000/monax/pkgs"
+	"github.com/eshnil2000/monax/util"
 
 	"github.com/spf13/cobra"
 )

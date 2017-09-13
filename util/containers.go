@@ -53,6 +53,22 @@ var (
 
 	ErrNameNotFound = errors.New("container name not found")
 )
+const (
+	DATA_VERSION      = "0.17"
+	DB_VERSION        = "0.17.0"
+	KEYS_VERSION      = "0.17.0"
+	COMPILERS_VERSION = "0.18.0"
+)
+
+var (
+	DefaultRegistry = "quay.io"
+	BackupRegistry  = ""
+
+	ImageData      = fmt.Sprintf("monax/data:%s", DATA_VERSION)
+	ImageDB        = fmt.Sprintf("monax/db:%s", DB_VERSION)
+	ImageKeys      = fmt.Sprintf("monax/keys:%s", KEYS_VERSION)
+	ImageCompilers = fmt.Sprintf("monax/compilers:%s", COMPILERS_VERSION)
+)
 
 // UniqueName() returns a unique container name, prefixed with the short
 // entity name, e.g. `keys-6ba7b811-9dad-11d1-80b4-00c04fd430c8`
@@ -374,7 +390,7 @@ func PullImage(image string, writer io.Writer) error {
 	r, w := io.Pipe()
 	opts := docker.PullImageOptions{
 		Repository:    image,
-		Registry:      version.DefaultRegistry,
+		Registry:      DefaultRegistry,
 		Tag:           tag,
 		OutputStream:  w,
 		RawJSONStream: true,
@@ -397,7 +413,7 @@ func PullImage(image string, writer io.Writer) error {
 
 		if err := DockerClient.PullImage(opts, auth); err != nil {
 			opts.Repository = image
-			opts.Registry = version.BackupRegistry
+			opts.Registry = BackupRegistry
 			if err := DockerClient.PullImage(opts, auth); err != nil {
 				ch <- DockerError(err)
 			}

@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/monax/monax/config"
-	"github.com/monax/monax/log"
+	"github.com/eshnil2000/monax/config"
+	"github.com/eshnil2000/monax/log"
 )
 
 func GetFileByNameAndType(typ, name string) string {

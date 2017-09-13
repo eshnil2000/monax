@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/monax/definitions"
-	"github.com/monax/monax/log"
-	"github.com/monax/monax/version"
+	"github.com/eshnil2000/monax/definitions"
+	"github.com/eshnil2000/monax/log"
+	"github.com/eshnil2000/monax/version"
 
 	docker "github.com/fsouza/go-dockerclient"
 )

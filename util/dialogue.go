@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/monax/log"
+	"github.com/eshnil2000/monax/log"
 )
 
 func GetStringResponse(question string, defaultAnswer string, reader *os.File) (string, error) {

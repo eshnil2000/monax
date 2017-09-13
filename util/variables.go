@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/monax/definitions"
-	"github.com/monax/monax/log"
+	"github.com/eshnil2000/monax/definitions"
+	"github.com/eshnil2000/monax/log"
 )
 
 func PreProcess(toProcess string, do *definitions.Do) (string, error) {
